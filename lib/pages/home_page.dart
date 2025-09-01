@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -12,6 +13,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late double deviceHeight, deviceWidth;
+  String? _taskContent;
+  Box? _box;
   _HomePageState();
   @override
   Widget build(BuildContext context) {
@@ -19,6 +22,8 @@ class _HomePageState extends State<HomePage> {
     deviceWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.secondary,
         toolbarHeight: deviceHeight * 0.15,
         title: const Text(
           "Taskly!",
@@ -26,7 +31,7 @@ class _HomePageState extends State<HomePage> {
           style: TextStyle(fontSize: 25),
         ),
       ),
-      body: _taskList(),
+      body: _taskView(),
       floatingActionButton: _addTaskButton(),
     );
   }
@@ -46,13 +51,45 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _taskView() {
+    return FutureBuilder(
+      future: Hive.openBox('tasks'),
+      builder: (BuildContext _context, AsyncSnapshot _snapshot) {
+        if (_snapshot.connectionState == ConnectionState.done) {
+          _box = _snapshot.data;
+          return _taskList();
+        } else {
+          return const Center(child: CircularProgressIndicator());
+        }
+      },
+    );
+  }
+
   Widget _addTaskButton() {
     return FloatingActionButton(
-      backgroundColor: Colors.red,
-      onPressed: () {},
-      child: const Icon(    
-          Icons.add_a_photo_outlined,
-      )
+      onPressed: _displayTaskPopup,
+      child: const Icon(Icons.add_outlined),
+    );
+  }
+
+  void _displayTaskPopup() {
+    showDialog(
+      context: context,
+      builder: (BuildContext _context) {
+        return AlertDialog(
+          title: const Text("Add New Task!"),
+          content: TextField(
+            onSubmitted: (value) {
+              Navigator.of(_context).pop();
+            },
+            onChanged: (value) {
+              setState(() {
+                _taskContent = value;
+              });
+            },
+          ),
+        );
+      },
     );
   }
 }

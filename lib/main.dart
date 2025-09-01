@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:taskly_app/pages/home_page.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
-void main() {
+void main() async {
+  await Hive.initFlutter("hive_boxes");
   runApp(const MyApp());
 }
 
@@ -14,14 +16,12 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Taskly',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.red),
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.red,
-          foregroundColor: Colors.white
+        colorScheme: const ColorScheme.light(
+          primary: Colors.red,
+          secondary: Colors.white,
         ),
       ),
       home: const HomePage(),
     );
   }
 }
-
