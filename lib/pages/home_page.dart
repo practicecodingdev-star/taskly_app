@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:taskly_app/models/task.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -37,17 +38,38 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _taskList() {
-    return ListView(
-      children: [
-        ListTile(
+    List tasks = _box!.values.toList();
+    return ListView.builder(
+      itemCount: tasks.length,
+      itemBuilder: (BuildContext _context, int _index) {
+        Task task = Task.fromMap(tasks[_index]);
+        return ListTile(
           title: Text(
-            "Do Laundry",
-            style: TextStyle(decoration: TextDecoration.lineThrough),
+            task.content,
+            style: TextStyle(
+              decoration: task.done ? TextDecoration.lineThrough : null,
+            ),
           ),
-          subtitle: Text(DateTime.now().toString()),
-          trailing: Icon(Icons.check_box_outlined, color: Colors.red),
-        ),
-      ],
+          subtitle: Text(task.timestamp.toString()),
+          trailing: Icon(
+            task.done
+                ? Icons.check_box_outlined
+                : Icons.check_box_outline_blank_outlined,
+            color: Colors.red,
+          ),
+          onTap: () {
+            task.done = !task.done;
+            _box!.putAt(_index, task.toMap());
+            setState(() {});
+          },
+          onLongPress: () {
+            _box!.deleteAt(_index);
+            setState(() {
+              
+            });
+          },
+        );
+      },
     );
   }
 
@@ -55,7 +77,7 @@ class _HomePageState extends State<HomePage> {
     return FutureBuilder(
       future: Hive.openBox('tasks'),
       builder: (BuildContext _context, AsyncSnapshot _snapshot) {
-        if (_snapshot.connectionState == ConnectionState.done) {
+        if (_snapshot.hasData) {
           _box = _snapshot.data;
           return _taskList();
         } else {
@@ -80,6 +102,17 @@ class _HomePageState extends State<HomePage> {
           title: const Text("Add New Task!"),
           content: TextField(
             onSubmitted: (value) {
+              if (_taskContent != null) {
+                Task task = Task(
+                  content: _taskContent!,
+                  timestamp: DateTime.now(),
+                  done: false,
+                );
+                _box!.add(task.toMap());
+              }
+              setState(() {
+                _taskContent = null;
+              });
               Navigator.of(_context).pop();
             },
             onChanged: (value) {
